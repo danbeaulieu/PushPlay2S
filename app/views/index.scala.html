@@ -1,0 +1,46 @@
+@(port: String)
+
+@main("") {
+    
+    <script>
+
+  Pusher.host = "localhost"; // change to your host
+  Pusher.ws_port = @port; // change to the port Play! is started on
+  
+  Pusher.log = function(message) {
+    if (window.console && window.console.log) window.console.log(message);
+  };
+  
+  var chatChannel;
+  $(document).ready(function() {
+    console.log("ready");
+    var pusher = new Pusher('foo'); // Replace with your app key in application.conf
+    
+    
+    chatChannel = pusher.subscribe('private-messages');
+    chatChannel.bind('pusher:subscription_succeeded', function(data) {
+        console.log("subbed");
+        updateContainer('subscribed!');
+        chatChannel.trigger('client-talk', {'message': 'auto-message'});
+    });
+    chatChannel.bind('client-talk', function(data) {
+        updateContainer(data.message);
+    });
+  });
+  
+  function updateContainer(msg) {
+     $('#container').append('<div class="update">' + msg + '</div>');
+  }
+  
+  function triggerFromInput() {
+     chatChannel.trigger('client-talk', {'message': $('#message').val()});
+  }
+
+</script>
+
+<h2>PushPlay!</h2>
+</br>
+<input type='text' id='message'></input> <input type="submit" onclick='javascript:triggerFromInput();' value="Send Message">
+<div id="container"></div>
+    
+}
