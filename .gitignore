@@ -1,3 +1,7 @@
+*.class
+*.log
+*.*~
+
 logs
 project/project
 project/target
@@ -13,3 +17,5 @@ dist
 /.project
 /RUNNING_PID
 /.settings
+
+
