@@ -23,7 +23,6 @@ class PublicChannel(name: String) extends Channel(name) {
   
   def subscribe(message: JsObject, socket_id: String, subscriberChannel: PlayChannel[JsValue]): Message = { 
     
-    System.out.println("adding socket_id " + socket_id)
     PubSub.subscribe(name)
     subscribers.put(socket_id, subscriberChannel)
     Message("pusher_internal:subscription_succeeded", name, null)
@@ -77,16 +76,6 @@ object Channel {
   def find(channelName: String): Option[Channel] = {
     channels.get(channelName)
   }
-
-  /*def notifyAll(channelName: String, message: JsValue) = {
-    
-    subscribers.get(channelName) match {
-      case Some(m) => {
-        m.values.map(_.push(message))
-      }    
-      case None =>
-    }
-  }*/
 
   def isAuthenticated(channelName: String): Boolean = {
     return channelName.startsWith("private-") || channelName.startsWith("presence-")  

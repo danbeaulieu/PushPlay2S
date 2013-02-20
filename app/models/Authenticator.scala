@@ -44,9 +44,7 @@ object Authenticator {
   def isValidSignature(msg: JsObject, socket_id: String): Boolean = {
 		(msg \ "data" \ "auth").asOpt[String].map{ auth => {
       val channel = (msg \ "data" \ "channel").as[String]
-      System.out.println("got channel")
       val channel_data = (msg \ "data" \ "channel_data").asOpt[String]
-      System.out.println("got channel_data")
       return computeSignature(channel, socket_id, channel_data).equals(auth.split(":")(1))
       }
     } getOrElse {

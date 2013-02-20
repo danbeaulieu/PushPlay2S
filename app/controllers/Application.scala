@@ -19,24 +19,6 @@ object Application extends Controller {
   val mFilters = new MessageFilters()
 
   val messageFixer = mFilters.allFilters
-  
-  def index = Action {
-    val port = "9000"
-    Ok(views.html.index(port))
-  }
-
-  def auth = Action { implicit request => 
-    val socket_id: String = request.body.asFormUrlEncoded match {
-      case Some(m) => m.get("socket_id").get(0)
-      case None => "" //TODO do something better here
-    }
-    val channel: String = request.body.asFormUrlEncoded match {
-      case Some(m) => m.get("channel_name").get(0)
-      case None => "" //TODO do something better here
-    }
-	  val token: String = Authenticator.computeSignature(channel, socket_id, None);
-	  Ok(Json.toJson(Map("auth" -> (Play.current.configuration.getString("pusher.app_key").get + ":" + token))))
-  }
 
   def app(apiKey: String) = WebSocket.using[JsValue] { req =>
     Logger.debug("received request")
