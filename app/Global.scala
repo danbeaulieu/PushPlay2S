@@ -4,7 +4,7 @@ import redis.clients.jedis.Jedis
 import com.typesafe.plugin.RedisPlugin
 import play.api.Play.current
 import play.api.libs.concurrent.Akka
-import models.PubSub
+import models.pushplay2s.PubSub
 
 object Global extends GlobalSettings {
 

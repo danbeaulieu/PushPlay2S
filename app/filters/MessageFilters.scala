@@ -1,4 +1,4 @@
-package filters
+package filters.pushplay2s
 
 import play.api.Logger
 import play.api.libs.iteratee._
@@ -6,11 +6,13 @@ import play.api.libs.json._
 
 class MessageFilters {
 
-  val removeChannelFilter = Enumeratee.map[JsValue](removeNullChannel)
+  val removeChannelee = Enumeratee.map[JsValue](removeNullChannel)
 
-  val removeDataFilter = Enumeratee.map[JsValue](removeNullData)
+  val removeDataee = Enumeratee.map[JsValue](removeNullData)
 
-  val allFilters = removeChannelFilter.compose(removeDataFilter)
+  val removeSocketIdee = Enumeratee.map[JsValue](removeSocketId)
+
+  val allFilters = removeChannelee.compose(removeDataee).compose(removeSocketIdee)
 
   def removeNullChannel(in: JsValue): JsValue = {
     in match {
@@ -28,5 +30,9 @@ class MessageFilters {
       }
       case _ => in
     }
+  }
+
+  def removeSocketId(in: JsValue): JsValue = {
+    in.as[JsObject] - "socket_id"
   }
 }

@@ -1,4 +1,4 @@
-package models
+package models.pushplay2s
 
 import com.typesafe.plugin.RedisPlugin
 import play.api.Play.current

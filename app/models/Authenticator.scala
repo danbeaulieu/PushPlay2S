@@ -1,4 +1,4 @@
-package models
+package models.pushplay2s
 
 import play.api.Play
 import play.api.libs.json._

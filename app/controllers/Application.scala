@@ -1,6 +1,6 @@
-package controllers
+package controllers.pushplay2s
 
-import filters._
+import filters.pushplay2s._
 
 import play.api._
 import play.api.mvc._
@@ -12,7 +12,7 @@ import play.api.libs.json.Json._
 
 import java.util.UUID;
 
-import models._
+import models.pushplay2s._
 
 object Application extends Controller {
   
