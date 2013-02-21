@@ -3,9 +3,7 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.pushplay2s.Application.index
 GET     /app/:apiKey                controllers.pushplay2s.Application.app(apiKey: String)
-POST    /pusher/auth                controllers.pushplay2s.Application.auth()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
