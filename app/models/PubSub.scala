@@ -22,14 +22,13 @@ object PubSub extends JedisPubSub {
 
   override def onMessage(channel: String, message: String) = {
 		
-    System.out.println("got message " + message)
-		val m = Json.parse(message)
+    val m = Json.parse(message)
     if (channel.equals("pushplay2s:presence_updates")) {
       m match {
         case pevent: JsObject if (pevent \ "event") == JsString("add_member") => {
           (pevent \ "channel").asOpt[String].map{ channelName => 
             Channel.find(channel) match {
-              case Some(c: PresenceChannel) => c.notifyNewMember(Json.parse((pevent \ "data" \ "channel_data").as[String]))
+              case Some(c: PresenceChannel) => c.notifyMemberAdded(Json.parse((pevent \ "data" \ "channel_data").as[String]))
               case None => Logger.error("Could not find channel by name=" + channel)       
             }
           } getOrElse {

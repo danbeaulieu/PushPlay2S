@@ -14,13 +14,15 @@ import collection.JavaConversions._
 import scala.collection.concurrent.TrieMap
 import java.util.concurrent.atomic._
 
+case class Subscription(channel: PlayChannel[JsValue], channel_data: Option[JsValue])
+
 abstract class Channel(val name: String) {
   
   lazy val pool = Play.application.plugin(classOf[RedisPlugin]).get.sedisPool
 
   PubSub.subscribe(name)
 
-  val subscribers = scala.collection.mutable.Map[String, PlayChannel[JsValue]]()
+  val subscribers = scala.collection.mutable.Map[String, Subscription]()
 
   def subscribe(message: JsObject, socket_id: String, channel: PlayChannel[JsValue]): Message
   
@@ -34,7 +36,7 @@ class PublicChannel(name: String) extends Channel(name) {
   
   def subscribe(message: JsObject, socket_id: String, subscriberChannel: PlayChannel[JsValue]): Message = { 
     
-    subscribers.put(socket_id, subscriberChannel)
+    subscribers.put(socket_id, Subscription(subscriberChannel, None))
     Message("pusher_internal:subscription_succeeded", name, null)
   }
 
@@ -49,7 +51,7 @@ class PublicChannel(name: String) extends Channel(name) {
 
   def notifyAll(message: JsValue) = 
   
-    subscribers.values.map(_.push(message))
+    subscribers.values.map(_.channel.push(message))
     
 }
 
@@ -90,7 +92,7 @@ class PresenceChannel(name: String) extends PrivateChannel(name) {
         client.rpush(name, (message \ "data" \ "channel_data").as[String])
       }
       // return message with channel_data
-      subscribers.put(socket_id, subscriberChannel)
+      subscribers.put(socket_id, Subscription(subscriberChannel, Some(message \ "data" \ "channel_data")))
       return Message("pusher_internal:subscription_succeeded", name, toJson(
         Map("presence" -> toJson(
           Map("count" -> toJson(members.size),
@@ -100,17 +102,45 @@ class PresenceChannel(name: String) extends PrivateChannel(name) {
     }
   }
   
+  override def unsubscribe(socket_id: String) = {
+
+    subscribers.remove(socket_id) match {
+      case Some(subscription) => {
+        subscription.channel_data match {
+          case Some(cd) => {
+            pool.withJedisClient{ client =>
+              client.lrem(name, -1, cd.as[String])
+            }
+            PubSub.publish("pushplay2s:presence_updates", Json.toJson(
+              Message("add_member", name, Json.toJson(Map("channel_data" -> cd)))
+            ))
+          }
+          case None => Logger.error("Unsubscribe from channel " + name + " but missing user information")
+        }
+      }
+      case None => Logger.info("Unsubscribing from channel " + name + " but no subscription was found...")
+    }
+  }
+  
   def memberIds =
     members.map{ member => (member \ "user_id").as[String] }
 
   def memberHash =
     members.map{ member => ((member \ "user_id").as[String] -> (member \ "user_info"))}.toMap
 
-  def notifyNewMember(channel_data: JsValue) = {
+  def notifyMemberAdded(channel_data: JsValue) = {
     if (!members.contains(channel_data)) {
       notifyAll(Json.toJson(Message(name, "pusher_internal:member_added", channel_data)))
     }
     members.append(channel_data)
+  }
+  
+  def notifyMemberRemoved(channel_data: JsValue) = {
+    members -= channel_data
+    if (!members.contains(channel_data)) {
+      notifyAll(Json.toJson(Message(name, "pusher_internal:member_added", channel_data)))
+    }
+    
   }
 }
 
