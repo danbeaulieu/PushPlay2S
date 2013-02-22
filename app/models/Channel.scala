@@ -108,11 +108,12 @@ class PresenceChannel(name: String) extends PrivateChannel(name) {
       case Some(subscription) => {
         subscription.channel_data match {
           case Some(cd) => {
+            Logger.debug("removing channel_data from redis")
             pool.withJedisClient{ client =>
               client.lrem(name, -1, cd.as[String])
             }
             PubSub.publish("pushplay2s:presence_updates", Json.toJson(
-              Message("add_member", name, Json.toJson(Map("channel_data" -> cd)))
+              Message("remove_member", name, Json.toJson(Map("channel_data" -> cd)))
             ))
           }
           case None => Logger.error("Unsubscribe from channel " + name + " but missing user information")
@@ -138,7 +139,7 @@ class PresenceChannel(name: String) extends PrivateChannel(name) {
   def notifyMemberRemoved(channel_data: JsValue) = {
     members -= channel_data
     if (!members.contains(channel_data)) {
-      notifyAll(Json.toJson(Message(name, "pusher_internal:member_added", channel_data)))
+      notifyAll(Json.toJson(Message(name, "pusher_internal:member_removed", Json.toJson(Map("user_id" -> (channel_data \ "user_id") )))))
     }
     
   }

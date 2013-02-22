@@ -27,6 +27,7 @@ object Application extends Controller {
 
     val (out, ws_channel) = Concurrent.broadcast[JsValue]
     
+    var subscriptions = Set[String]()
     val in = Iteratee.foreach[JsValue] ( _ match {
       case sub: JsObject if (sub \ "event") == JsString("pusher:subscribe") => {
         (sub \ "data" \ "channel").asOpt[String].map{ channelName => {
@@ -35,6 +36,7 @@ object Application extends Controller {
           ws_channel.push(Json.toJson(
             channel.subscribe(sub, socket_id, ws_channel)
           ))
+          subscriptions = subscriptions + channelName
           }  
         } getOrElse {
           // TODO this shouldn't ever happen
@@ -45,6 +47,7 @@ object Application extends Controller {
         (unsub \ "data" \ "channel").asOpt[String].map{ channelName => 
           val channel = Channel.findOrCreateChannel(channelName)
           channel.unsubscribe(socket_id)
+          subscriptions = subscriptions - channelName
         } getOrElse {
           // TODO this shouldn't ever happen
           Logger.debug("Missing channel in unsubscribe message")        
@@ -65,8 +68,19 @@ object Application extends Controller {
           Message("pusher:pong", null, null)
         ))           
       }
-      case _ => { Logger.debug("Unrecognized message") }
-    }) mapDone {_ => Logger.debug("Connection closed") }//TODO cleanup state
+      case _ => { 
+        
+      }
+    }) mapDone {_ =>  
+      Logger.debug("closing connection, reaping subs " + subscriptions.size)
+      subscriptions.foreach(name => Channel.find(name) match {
+        case Some(c) => {
+          Logger.debug("unsubbing from channel " + name)
+          c.unsubscribe(socket_id)
+        }
+        case None => Logger.info("Tried to unsubscribe to nonexistant channel " + name)    
+      })    
+    }//TODO cleanup state
 
     val established: Enumerator[JsValue] = {
       Enumerator(
