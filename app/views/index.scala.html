@@ -17,7 +17,7 @@
     var pusher = new Pusher('foo'); // Replace with your app key in application.conf
     
     
-    chatChannel = pusher.subscribe('private-messages');
+    chatChannel = pusher.subscribe('presence-messages');
     chatChannel.bind('pusher:subscription_succeeded', function(data) {
         console.log("subbed");
         updateContainer('subscribed!');

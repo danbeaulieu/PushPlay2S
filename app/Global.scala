@@ -13,7 +13,7 @@ object Global extends GlobalSettings {
     Logger.debug("subscribing to redis")
     Akka.future { 
       val j = new RedisPlugin(app).jedisPool.getResource
-      j.subscribe(PubSub, "*")
+      j.subscribe(PubSub, "pushplay2s:presence_updates")
     }
   }  
   

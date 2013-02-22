@@ -20,6 +20,7 @@ object Application extends Controller {
 
   val messageFixer = mFilters.allFilters
 
+
   def app(apiKey: String) = WebSocket.using[JsValue] { req =>
     Logger.debug("received request")
     val socket_id = UUID.randomUUID().toString

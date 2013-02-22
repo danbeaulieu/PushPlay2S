@@ -11,8 +11,7 @@ import play.api.libs.json.Json._
 
 object PubSub extends JedisPubSub {
 
-
-  def publish(channel: String, msg: JsObject) {
+  def publish(channel: String, msg: JsValue) {
     	
     new RedisPlugin(Play.application).sedisPool.withJedisClient{ client => 
       
@@ -25,22 +24,25 @@ object PubSub extends JedisPubSub {
 		
     System.out.println("got message " + message)
 		val m = Json.parse(message)
-    m match {
-      case note: JsObject if (note \ "event") == JsString("pushplay:cluster_notifications") => {
-      }
-      case msg: JsObject => {
-        Channel.find(channel) match {
-          case Some(c) => c.notifyAll(m)  
-          case None => Logger.debug("Could not find channel by name=" + channel)       
+    if (channel.equals("pushplay2s:presence_updates")) {
+      m match {
+        case pevent: JsObject if (pevent \ "event") == JsString("add_member") => {
+          (pevent \ "channel").asOpt[String].map{ channelName => 
+            Channel.find(channel) match {
+              case Some(c: PresenceChannel) => c.notifyNewMember(Json.parse((pevent \ "data" \ "channel_data").as[String]))
+              case None => Logger.error("Could not find channel by name=" + channel)       
+            }
+          } getOrElse {
+            Logger.error("Missing channel in presence add_member message")        
+          }
         }
       }
+    } else {
+      Channel.find(channel) match {
+        case Some(c) => c.notifyAll(m)  
+        case None => Logger.error("Could not find channel by name=" + channel)       
+      }
     }
-		//if (channel.equals("pushplay:cluster_notifications")) {
-			
-		//} else {
-		//	m.put("channel", channel);
-		//	ChannelService.notifyAll(channel, m);
-		//}
 	}
 
 	override def onPMessage(arg0: String, arg1: String, arg2: String) = {
