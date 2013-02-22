@@ -28,9 +28,9 @@ object PubSub extends JedisPubSub {
       m match {
         case pevent: JsObject if (pevent \ "event") == JsString("add_member") => {
           (pevent \ "channel").asOpt[String].map{ channelName => 
-            Logger.debug("looking up channel by name " + channelName)
             Channel.find(channelName) match {
-              case Some(c: PresenceChannel) => c.notifyMemberAdded(Json.parse((pevent \ "data" \ "channel_data").as[String]))
+              case Some(c: PresenceChannel) => 
+                c.notifyMemberAdded(Json.parse((pevent \ "data" \ "channel_data").as[String]))
               case None => Logger.error("Could not find channel by name=" + channelName)       
             }
           } getOrElse {
@@ -44,7 +44,7 @@ object PubSub extends JedisPubSub {
               case None => Logger.error("Could not find channel by name=" + channelName)       
             }
           } getOrElse {
-            Logger.error("Missing channel in presence add_member message")        
+            Logger.error("Missing channel in presence remove_member message")        
           }
         }
       }

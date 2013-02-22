@@ -1,18 +1,15 @@
 package controllers.pushplay2s
 
+import Concurrent._
 import filters.pushplay2s._
-
+import java.util.UUID
+import models.pushplay2s._
 import play.api._
 import play.api.mvc._
 import play.api.libs.iteratee._
 import play.api.libs.concurrent._
-import Concurrent._
 import play.api.libs.json._
 import play.api.libs.json.Json._
-
-import java.util.UUID;
-
-import models.pushplay2s._
 
 object Application extends Controller {
   
@@ -20,14 +17,14 @@ object Application extends Controller {
 
   val messageFixer = mFilters.allFilters
 
-
   def app(apiKey: String) = WebSocket.using[JsValue] { req =>
-    Logger.debug("received request")
+    
     val socket_id = UUID.randomUUID().toString
 
     val (out, ws_channel) = Concurrent.broadcast[JsValue]
     
     var subscriptions = Set[String]()
+    
     val in = Iteratee.foreach[JsValue] ( _ match {
       case sub: JsObject if (sub \ "event") == JsString("pusher:subscribe") => {
         (sub \ "data" \ "channel").asOpt[String].map{ channelName => {
@@ -69,7 +66,7 @@ object Application extends Controller {
         ))           
       }
       case _ => { 
-        
+        Logger.info("recieved unrecoginized message " + _)
       }
     }) mapDone {_ =>  
       Logger.debug("closing connection, reaping subs " + subscriptions.size)
@@ -80,7 +77,6 @@ object Application extends Controller {
         }
         case None => Logger.info("Tried to unsubscribe to nonexistant channel " + name)    
       })    
-    }//TODO cleanup state
 
     val established: Enumerator[JsValue] = {
       Enumerator(
