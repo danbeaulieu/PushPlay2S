@@ -25,17 +25,18 @@ point your browser at localhost:9000
 You can also embed this project inside an existing Play! 2.0 as a module quite simply using git. This way you can deploy both your existing web application and real time messaging support at the same time on the same hardware. Please see the section Usage As A Subproject for more details.
 
 In both cases you should amodify the conf/pushplay2s.conf file to include these three properties:
+(They currently don't mean anything, but are required and will be meaningful in the future)
 <pre>
-pusher.appId
-pusher.key
-pusher.secret
+pusher.appId="someexample"
+pusher.app_key="foobar123"
+pusher.secret_key="7893471290032"
 </pre>
 
 You'll also need to overwrite the pusher connection settings in the pusher javascript client library. Namely the Pusher host and ws_port settings. Check out app/views/index.scala.html to see how easy this is.
 
 ## Usage As A Subproject
 
-TODO
+Please see the example Play! 2.0 project that integrates PushPlay2S at https://github.com/danbeaulieu/PushPlay2S-Example
 
 ## Alternatives
 
@@ -45,11 +46,11 @@ TODO
 
 ## TODO
 
-- Show usage as subproject
 - Create github project page
 - Make the demo better
 - Add webhooks support
 - Add hazelcast/0mq support instead of Redis
+- Add tests
 
 ## Notes
 
