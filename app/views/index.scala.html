@@ -4,7 +4,7 @@
     
     <script>
 
-  Pusher.host = "localhost"; // change to your host
+  Pusher.host = window.location.hostname; // change to your host
   Pusher.ws_port = @port; // change to the port Play! is started on
   
   Pusher.log = function(message) {
