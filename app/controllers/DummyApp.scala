@@ -41,7 +41,7 @@ object DummyApp extends Controller {
           "channel_data" -> cd)
       case None => Map("auth" -> (Play.current.configuration.getString("pusher.app_key").get + ":" + token))
     }
-	  Ok(Json.toJson(response)).WithHeaders("Access-Control-Allow-Origin" -> "*")
+	  Ok(Json.toJson(response)).withHeaders("Access-Control-Allow-Origin" -> "*")
   }
   
 }
